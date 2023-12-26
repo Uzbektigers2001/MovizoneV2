@@ -7,9 +7,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-var endpoint = "192.168.1.140:9000";
-var accesskey = "CcjWBl1HXig5YFklpFIO";
-var secretkey = "FrbNXKZNEOXfyZXj4CWiIqhmccs3z8tt5SUQwHeV";
+var endpoint = builder.Configuration.GetValue<string>("Config:MinIO:Endpoint");
+var accesskey = builder.Configuration.GetValue<string>("Config:MinIO:AccessKey");
+var secretkey = builder.Configuration.GetValue<string>("Config:MinIO:SecretKey");
+
 var minio = new MinioClient()
     .WithEndpoint(endpoint)
     .WithCredentials(accesskey,secretkey)

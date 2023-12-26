@@ -12,10 +12,11 @@ namespace Movizone.MVC.Controllers
 	public class DetailsMovieController : Controller
 	{
 		private readonly IMinioService _minio;
-
-		public DetailsMovieController(IMinioService minio)
+		private readonly IWebHostEnvironment _appEnvironment;
+		public DetailsMovieController(IMinioService minio, IWebHostEnvironment appEnvironment)
 		{
 			_minio = minio;
+			_appEnvironment = appEnvironment;
 		}
 
 		public IActionResult Index()
@@ -29,77 +30,46 @@ namespace Movizone.MVC.Controllers
 			return View(viewModel);
 		}
 
-		//[HttpPost]
-		//public async Task<IActionResult> UploadFile()
-		//{
-		//	var bucketNomi = "sizning-bucket-nomingiz"; // O'z bucket nomingizni belgilang
-		//	var faylNomi = "misol.mp4"; // Yuklanayotgan fayl nomi
+		[HttpGet]
+		public async Task<IActionResult> Upload()
+		{
+			var mimeType = "video/mp4"; // Fayl turi (misol: video/mp4)
 
-		//	using (var stream = new MemoryStream())
-		//	{
-		//		var videoPath = "D:/Development/Projects/Project1/Project1/wwwroot/LinkinPark.mp4"; // Video fayl manzili
+			var bucket = "demobucket";
 
-		//		var fileProvider = new PhysicalFileProvider(Path.GetDirectoryName(videoPath));
-		//		var fileInfo = fileProvider.GetFileInfo(Path.GetFileName(videoPath));
+			var videoPath = Path.Combine(_appEnvironment.WebRootPath, "LinkinPark.mp4");
 
-		//		var fileStream = fileInfo.CreateReadStream();
+			var fileProvider = new PhysicalFileProvider(Path.GetDirectoryName(videoPath));
 
-		//		var mimeType = "video/mp4"; // Fayl turi (misol: video/mp4)
+			var fileInfo = fileProvider.GetFileInfo(Path.GetFileName(videoPath));
 
-		//		var bucket = "demobucket";
+			var fileStream = fileInfo.CreateReadStream();
 
-		//		//var bktExsistArgs = new BucketExistsArgs().WithBucket(bucket);
-		//		//bool found = await _minio.BucketExistsAsync(bktExsistArgs);
-		//		//if (!found)
-		//		//{
-		//		//	var mkbktArgs = new MakeBucketArgs().WithBucket(bucket);
-		//		//	await _minio.MakeBucketAsync(mkbktArgs);
-		//		//}
+			await _minio.UploadWithoutGuid(bucket, "LinkinPark.mp4", fileStream);
 
-		//		#region file
-		//		//PutObjectArgs putObjectArgs = new PutObjectArgs()
-		//		//	.WithBucket(bucket)
-		//		//	.WithObject(Path.GetFileName(videoPath))
-		//		//	.WithFileName(videoPath)
-		//		//	.WithContentType(mimeType);
-		//		//await _minio.PutObjectAsync(putObjectArgs);
-		//		#endregion
-
-		//		#region stream
-		//		PutObjectArgs putObjectArgsStream = new PutObjectArgs()
-		//			.WithBucket(bucket)
-		//			.WithObject(Path.GetFileName(videoPath))
-		//			.WithStreamData(fileStream)
-		//			.WithObjectSize(fileStream.Length)
-		//			.WithContentType("application/octet-stream");
-
-		//		await _minio.PutObjectAsync(putObjectArgsStream);
-		//		#endregion
-		//		return View();
-		//	}
-		//}
+			return View();
+		}
 
 		public async Task<IActionResult> StreamVideo()
 		{
 			try
 			{
-				//var videoPath = "Development/Projects/Project1/Project1/wwwroot/LinkinPark-Copy.mp4"; // Video fayl manzili
-
-				//var fileProvider = new PhysicalFileProvider(Path.GetDirectoryName(videoPath));
-				//var fileInfo = fileProvider.GetFileInfo(Path.GetFileName(videoPath));
-
-				//var fileStream = fileInfo.CreateReadStream();
-
-				//var mimeType = "video/mp4"; // Fayl turi (misol: video/mp4)
+				var mimeType = "video/mp4"; // Fayl turi (misol: video/mp4)
 
 				var bucket = "demobucket";
-				//var filenameGuid = await _minio.Upload(bucket, Path.GetDirectoryName(videoPath).Replace("\\", "/"), Path.GetFileName(videoPath), fileStream);
 
-				var filenameGuid = "65cc8ce0-73d8-4ae2-9da2-e6d4042d9839--LinkinPark-Copy.mp4";
+				//var filenameGuid = "65cc8ce0-73d8-4ae2-9da2-e6d4042d9839--LinkinPark-Copy.mp4";
 
-				var mimeType = $"video/{filenameGuid.Split('.').Last().ToLower().Replace(".", "")}";
+				//var mimeType = $"video/{nameGuid.Split('.').Last().ToLower().Replace(".", "")}";
 
 				return await _minio.VideoStreaming(bucket, "", "LinkinPark.mp4");
+
+				//var result = new FileStreamResult(fileStream, mimeType)
+				//{
+				//	FileDownloadName = Path.GetFileName(videoPath),
+				//	EnableRangeProcessing = true
+				//};
+				//return result;
 			}
 			catch (Exception ex)
 			{
